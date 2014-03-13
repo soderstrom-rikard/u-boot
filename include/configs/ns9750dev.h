@@ -193,4 +193,6 @@ extern void __led_set(led_id_t mask, int state);
 
 #endif /* CONFIG_STATUS_LED */
 
+#define CONFIG_SYS_TEXT_BASE		0x00780000 /* .text start address */
+
 #endif	/* __CONFIG_H */
