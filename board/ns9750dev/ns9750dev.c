@@ -73,6 +73,8 @@ int board_init( void )
 	/* adress of boot parameters */
 	gd->bd->bi_boot_params = 0x10000100;
 
+	/* Detect ram size @TODO This feels strange considering the dram_init() part */
+	gd->ram_size = get_ram_size((long *)PHYS_SDRAM_1, PHYS_SDRAM_1_SIZE);
 
 /* this speeds up your boot a quite a bit.  However to make it
  *  work, you need make sure your kernel startup flush bug is fixed.
@@ -115,11 +117,11 @@ void ether__init (void)
 int dram_init (void)
 {
 	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
-	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+	gd->bd->bi_dram[0].size = get_ram_size((long *)PHYS_SDRAM_1, PHYS_SDRAM_1_SIZE);
 
 #if CONFIG_NR_DRAM_BANKS > 1
 	gd->bd->bi_dram[1].start = PHYS_SDRAM_2;
-	gd->bd->bi_dram[1].size = PHYS_SDRAM_2_SIZE;
+	gd->bd->bi_dram[1].size = get_ram_size((long *)PHYS_SDRAM_2, PHYS_SDRAM_2_SIZE);
 #endif
 	return 0;
 }

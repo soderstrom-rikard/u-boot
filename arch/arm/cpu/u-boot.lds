@@ -101,7 +101,6 @@ SECTIONS
 	.dynstr : { *(.dynstr*) }
 	.dynamic : { *(.dynamic*) }
 	.plt : { *(.plt*) }
-	.rel.plt : { *(.rel.plt*) }
 	.interp : { *(.interp*) }
 	.gnu : { *(.gnu*) }
 	.ARM.exidx : { *(.ARM.exidx*) }

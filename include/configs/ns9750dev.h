@@ -138,8 +138,6 @@
 #define CONFIG_STACKSIZE_IRQ	(4*1024)	/* IRQ stack */
 #define CONFIG_STACKSIZE_FIQ	(4*1024)	/* FIQ stack */
 #endif
-#define CONFIG_SYS_INIT_SP_ADDR 	0	/* stack pointer address */ /*@TODO*/
-
 /*-----------------------------------------------------------------------
  * Physical Memory Map
  */
@@ -153,7 +151,12 @@
 #define PHYS_FLASH_1		0x50000000 /* Flash Bank #1 */
 
 #define CONFIG_SYS_FLASH_BASE		PHYS_FLASH_1
+
+/* additions for new relocation code, must be added to all boards */
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
+#define CONFIG_SYS_INIT_SP_ADDR	\
+	(CONFIG_SYS_SDRAM_BASE + 0x1000 - GENERATED_GBL_DATA_SIZE)
+
 /*-----------------------------------------------------------------------
  * FLASH and environment organization
  */
