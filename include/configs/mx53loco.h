@@ -22,6 +22,8 @@
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_INITRD_TAG
 
+#define CONFIG_SYS_GENERIC_BOARD
+
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(10 * 1024 * 1024)
 
@@ -194,11 +196,11 @@
 
 /* Physical Memory Map */
 #define CONFIG_NR_DRAM_BANKS	2
-#define PHYS_SDRAM_1		CSD0_BASE_ADDR
-#define PHYS_SDRAM_1_SIZE	(512 * 1024 * 1024)
-#define PHYS_SDRAM_2		CSD1_BASE_ADDR
-#define PHYS_SDRAM_2_SIZE	(512 * 1024 * 1024)
-#define PHYS_SDRAM_SIZE         (PHYS_SDRAM_1_SIZE + PHYS_SDRAM_2_SIZE)
+#define PHYS_SDRAM_1			CSD0_BASE_ADDR
+#define PHYS_SDRAM_1_SIZE		(gd->bd->bi_dram[0].size)
+#define PHYS_SDRAM_2			CSD1_BASE_ADDR
+#define PHYS_SDRAM_2_SIZE		(gd->bd->bi_dram[1].size)
+#define PHYS_SDRAM_SIZE			(gd->ram_size)
 
 #define CONFIG_SYS_SDRAM_BASE		(PHYS_SDRAM_1)
 #define CONFIG_SYS_INIT_RAM_ADDR	(IRAM_BASE_ADDR)

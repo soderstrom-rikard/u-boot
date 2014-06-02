@@ -11,7 +11,7 @@ lib-$(CONFIG_USE_PRIVATE_LIBGCC) += _ashldi3.o _ashrdi3.o _divsi3.o \
 ifdef CONFIG_ARM64
 obj-y	+= crt0_64.o
 else
-obj-y	+= crt0.o
+obj-y	+= vectors.o crt0.o
 endif
 
 ifndef CONFIG_SPL_BUILD
@@ -35,6 +35,7 @@ endif
 
 obj-y	+= sections.o
 ifdef CONFIG_ARM64
+obj-y	+= gic_64.o
 obj-y	+= interrupts_64.o
 else
 obj-y	+= interrupts.o

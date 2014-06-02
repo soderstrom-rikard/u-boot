@@ -88,7 +88,7 @@ libs-y += $(CPUDIR)/
 ifdef SOC
 libs-y += $(CPUDIR)/$(SOC)/
 endif
-libs-y += board/$(BOARDDIR)/
+libs-y += $(if $(BOARDDIR),board/$(BOARDDIR)/)
 libs-$(HAVE_VENDOR_COMMON_LIB) += board/$(VENDOR)/common/
 
 libs-$(CONFIG_SPL_FRAMEWORK) += common/spl/
@@ -104,6 +104,7 @@ libs-$(CONFIG_SPL_SPI_SUPPORT) += drivers/spi/
 libs-y += fs/
 libs-$(CONFIG_SPL_LIBGENERIC_SUPPORT) += lib/
 libs-$(CONFIG_SPL_POWER_SUPPORT) += drivers/power/ drivers/power/pmic/
+libs-$(CONFIG_SPL_MTD_SUPPORT) += drivers/mtd/
 libs-$(if $(CONFIG_CMD_NAND),$(CONFIG_SPL_NAND_SUPPORT)) += drivers/mtd/nand/
 libs-$(CONFIG_SPL_DRIVERS_MISC_SUPPORT) += drivers/misc/
 libs-$(CONFIG_SPL_ONENAND_SUPPORT) += drivers/mtd/onenand/
@@ -171,7 +172,7 @@ LDPPFLAGS += \
 	$(shell $(LD) --version | \
 	  sed -ne 's/GNU ld version \([0-9][0-9]*\)\.\([0-9][0-9]*\).*/-DLD_MAJOR=\1 -DLD_MINOR=\2/p')
 
-quiet_cmd_mkimage = UIMAGE  $@
+quiet_cmd_mkimage = MKIMAGE $@
 cmd_mkimage = $(objtree)/tools/mkimage $(MKIMAGEFLAGS_$(@F)) -d $< $@ \
 	$(if $(KBUILD_VERBOSE:1=), >/dev/null)
 
@@ -182,10 +183,27 @@ MKIMAGEFLAGS_MLO.byteswap = -T omapimage -n byteswap -a $(CONFIG_SPL_TEXT_BASE)
 MLO MLO.byteswap: $(obj)/u-boot-spl.bin
 	$(call if_changed,mkimage)
 
+MKIMAGEFLAGS_boot.bin = -T atmelimage
+
+ifeq ($(CONFIG_SPL_GENERATE_ATMEL_PMECC_HEADER),y)
+MKIMAGEFLAGS_boot.bin += -n $(shell $(obj)/../tools/atmel_pmecc_params)
+
+boot.bin: $(obj)/../tools/atmel_pmecc_params
+endif
+
+boot.bin: $(obj)/u-boot-spl.bin
+	$(call if_changed,mkimage)
+
 ALL-y	+= $(obj)/$(SPL_BIN).bin
 
 ifdef CONFIG_SAMSUNG
 ALL-y	+= $(obj)/$(BOARD)-spl.bin
+endif
+
+ifdef CONFIG_SUNXI
+ifndef CONFIG_SPL_FEL
+ALL-y	+= $(obj)/sunxi-spl.bin
+endif
 endif
 
 all:	$(ALL-y)
@@ -215,6 +233,13 @@ ifneq ($(CONFIG_SPL_TEXT_BASE),)
 LDFLAGS_$(SPL_BIN) += -Ttext $(CONFIG_SPL_TEXT_BASE)
 endif
 
+ifdef CONFIG_SUNXI
+quiet_cmd_mksunxiboot = MKSUNXI $@
+cmd_mksunxiboot = $(objtree)/tools/mksunxiboot $< $@
+$(obj)/sunxi-spl.bin: $(obj)/$(SPL_BIN).bin
+	$(call if_changed,mksunxiboot)
+endif
+
 quiet_cmd_u-boot-spl = LD      $@
       cmd_u-boot-spl = cd $(obj) && $(LD) $(LDFLAGS) $(LDFLAGS_$(@F)) \
 		       $(patsubst $(obj)/%,%,$(u-boot-spl-init)) --start-group \
@@ -231,11 +256,11 @@ $(u-boot-spl-dirs):
 	$(Q)$(MAKE) $(build)=$@
 
 quiet_cmd_cpp_lds = LDS     $@
-cmd_cpp_lds = $(CPP) $(cpp_flags) $(LDPPFLAGS) -ansi -D__ASSEMBLY__ \
-		-x assembler-with-cpp -P -o $@ $<
+cmd_cpp_lds = $(CPP) -Wp,-MD,$(depfile) $(cpp_flags) $(LDPPFLAGS) -ansi \
+		-D__ASSEMBLY__ -x assembler-with-cpp -P -o $@ $<
 
 $(obj)/u-boot-spl.lds: $(LDSCRIPT) FORCE
-	$(call if_changed,cpp_lds)
+	$(call if_changed_dep,cpp_lds)
 
 # read all saved command lines
 
