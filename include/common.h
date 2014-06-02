@@ -286,12 +286,6 @@ int run_command(const char *cmd, int flag);
  * @return 0 on success, or != 0 on error.
  */
 int run_command_list(const char *cmd, int len, int flag);
-int	readline	(const char *const prompt);
-int	readline_into_buffer(const char *const prompt, char *buffer,
-			int timeout);
-int	parse_line (char *, char *[]);
-void	init_cmd_timeout(void);
-void	reset_cmd_timeout(void);
 extern char console_buffer[];
 
 /* arch/$(ARCH)/lib/board.c */
@@ -305,6 +299,7 @@ extern ulong monitor_flash_len;
 int mac_read_from_eeprom(void);
 extern u8 __dtb_dt_begin[];	/* embedded device tree blob */
 int set_cpu_clk_info(void);
+int mdm_init(void);
 #if defined(CONFIG_DISPLAY_CPUINFO)
 int print_cpuinfo(void);
 #else
@@ -314,6 +309,7 @@ static inline int print_cpuinfo(void)
 }
 #endif
 int update_flash_size(int flash_size);
+int arch_early_init_r(void);
 
 /**
  * Show the DRAM size in a board-specific way
@@ -360,6 +356,11 @@ int do_ext2load(cmd_tbl_t *, int, int, char * const []);
 int	env_init     (void);
 void	env_relocate (void);
 int	envmatch     (uchar *, int);
+
+/* Avoid unfortunate conflict with libc's getenv() */
+#ifdef CONFIG_SANDBOX
+#define getenv uboot_getenv
+#endif
 char	*getenv	     (const char *);
 int	getenv_f     (const char *name, char *buf, unsigned len);
 ulong getenv_ulong(const char *name, int base, ulong default_val);
@@ -499,18 +500,7 @@ extern ssize_t spi_read	 (uchar *, int, uchar *, int);
 extern ssize_t spi_write (uchar *, int, uchar *, int);
 #endif
 
-#ifdef CONFIG_RPXCLASSIC
-void rpxclassic_init (void);
-#endif
-
 void rpxlite_init (void);
-
-#ifdef CONFIG_MBX
-/* $(BOARD)/mbx8xx.c */
-void	mbx_init (void);
-void	board_serial_init (void);
-void	board_ether_init (void);
-#endif
 
 #ifdef CONFIG_HERMES
 /* $(BOARD)/hermes.c */
@@ -686,9 +676,6 @@ ulong	get_UCLK (void);
 #if defined(CONFIG_LH7A40X)
 ulong	get_PLLCLK (void);
 #endif
-#if defined CONFIG_INCA_IP
-uint	incaip_get_cpuclk (void);
-#endif
 #if defined(CONFIG_IMX)
 ulong get_systemPLLCLK(void);
 ulong get_FCLK(void);
@@ -737,8 +724,11 @@ void	get_sys_info  ( sys_info_t * );
 #if defined(CONFIG_8xx) || defined(CONFIG_MPC8260)
 void	cpu_init_f    (volatile immap_t *immr);
 #endif
-#if defined(CONFIG_4xx) || defined(CONFIG_MPC85xx) || defined(CONFIG_MCF52x2) ||defined(CONFIG_MPC86xx)
+#if defined(CONFIG_4xx) || defined(CONFIG_MCF52x2) || defined(CONFIG_MPC86xx)
 void	cpu_init_f    (void);
+#endif
+#ifdef CONFIG_MPC85xx
+ulong cpu_init_f(void);
 #endif
 
 int	cpu_init_r    (void);
@@ -816,8 +806,7 @@ void	udelay        (unsigned long);
 void mdelay(unsigned long);
 
 /* lib/uuid.c */
-void uuid_str_to_bin(const char *uuid, unsigned char *out);
-int uuid_str_valid(const char *uuid);
+#include <uuid.h>
 
 /* lib/vsprintf.c */
 #include <vsprintf.h>
@@ -829,14 +818,10 @@ char *	strmhz(char *buf, unsigned long hz);
 #include <u-boot/crc.h>
 
 /* lib/rand.c */
-#if defined(CONFIG_RANDOM_MACADDR) || \
-	defined(CONFIG_BOOTP_RANDOM_DELAY) || \
-	defined(CONFIG_CMD_LINK_LOCAL)
 #define RAND_MAX -1U
 void srand(unsigned int seed);
 unsigned int rand(void);
 unsigned int rand_r(unsigned int *seedp);
-#endif
 
 /* common/console.c */
 int	console_init_f(void);	/* Before relocation; uses the serial  stuff	*/
@@ -846,7 +831,7 @@ int	ctrlc (void);
 int	had_ctrlc (void);	/* have we had a Control-C since last clear? */
 void	clear_ctrlc (void);	/* clear the Control-C condition */
 int	disable_ctrlc (int);	/* 1 to disable, 0 to enable Control-C detect */
-
+int confirm_yesno(void);        /*  1 if input is "y", "Y", "yes" or "YES" */
 /*
  * STDIO based functions (can always be used)
  */

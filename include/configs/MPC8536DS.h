@@ -11,6 +11,8 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
+#define CONFIG_SYS_GENERIC_BOARD
+#define CONFIG_DISPLAY_BOARDINFO
 #include "../board/freescale/common/ics307_clk.h"
 
 #ifdef CONFIG_36BIT
@@ -31,13 +33,13 @@
 
 #ifdef CONFIG_SDCARD
 #define CONFIG_RAMBOOT_SDCARD		1
-#define CONFIG_SYS_TEXT_BASE	0xf8f80000
+#define CONFIG_SYS_TEXT_BASE	0xf8f40000
 #define CONFIG_RESET_VECTOR_ADDRESS	0xf8fffffc
 #endif
 
 #ifdef CONFIG_SPIFLASH
 #define CONFIG_RAMBOOT_SPIFLASH		1
-#define CONFIG_SYS_TEXT_BASE	0xf8f80000
+#define CONFIG_SYS_TEXT_BASE	0xf8f40000
 #define CONFIG_RESET_VECTOR_ADDRESS	0xf8fffffc
 #endif
 
