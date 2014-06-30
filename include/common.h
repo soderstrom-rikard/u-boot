@@ -54,8 +54,6 @@ typedef volatile unsigned char	vu_char;
 #include <asm/immap_512x.h>
 #elif defined(CONFIG_MPC8260)
 #if   defined(CONFIG_MPC8247) \
-   || defined(CONFIG_MPC8248) \
-   || defined(CONFIG_MPC8271) \
    || defined(CONFIG_MPC8272)
 #define CONFIG_MPC8272_FAMILY	1
 #endif
@@ -273,6 +271,7 @@ int print_buffer(ulong addr, const void *data, uint width, uint count,
 /* common/main.c */
 void	main_loop	(void);
 int run_command(const char *cmd, int flag);
+int run_command_repeatable(const char *cmd, int flag);
 
 /**
  * Run a list of commands separated by ; or even \0
