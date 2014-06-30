@@ -295,7 +295,7 @@ void cli_simple_loop(void)
 		if (len == -1)
 			puts("<INTERRUPT>\n");
 		else
-			rc = run_command(lastcommand, flag);
+			rc = run_command_repeatable(lastcommand, flag);
 
 		if (rc <= 0) {
 			/* invalid command or not repeatable, forget it */
@@ -331,7 +331,7 @@ int cli_simple_run_command_list(char *cmd, int flag)
 		++next;
 	}
 	if (rcode == 0 && *line)
-		rcode = (cli_simple_run_command(line, 0) >= 0);
+		rcode = (cli_simple_run_command(line, 0) < 0);
 
 	return rcode;
 }
