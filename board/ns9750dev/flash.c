@@ -119,9 +119,7 @@ unsigned long flash_init (void)
 static void flash_get_offsets (ulong base, flash_info_t * info)
 {
 	int i;
-	OrgDef *pOrgDef;
 
-	pOrgDef = OrgIntel_28F256L18T;
 	if (info->flash_id == FLASH_UNKNOWN) {
 		return;
 	}
@@ -260,7 +258,7 @@ void flash_unprotect_sectors (FPWV * addr)
 
 int flash_erase (flash_info_t * info, int s_first, int s_last)
 {
-	int flag, prot, sect;
+	int prot, sect;
 	ulong type, start;
 	int rcode = 0;
 
@@ -295,7 +293,11 @@ int flash_erase (flash_info_t * info, int s_first, int s_last)
 	}
 
 	/* Disable interrupts which might cause a timeout here */
-	flag = disable_interrupts ();
+	rcode = disable_interrupts ();
+	if (rcode != 0) {
+		printf ("Interrupts could not be disabled\n");
+		return rcode;
+	}
 
 	/* Start erase on unprotected sectors */
 	for (sect = s_first; sect <= s_last; sect++) {
@@ -436,8 +438,8 @@ static int write_data (flash_info_t * info, ulong dest, FPW data)
 {
 	FPWV *addr = (FPWV *) dest;
 	ulong status;
-	int flag;
 	ulong start;
+	int rcode = 0;
 
 	/* Check if Flash is (sufficiently) erased */
 	if ((*addr & data) != data) {
@@ -446,7 +448,11 @@ static int write_data (flash_info_t * info, ulong dest, FPW data)
 	}
 	flash_unprotect_sectors (addr);
 	/* Disable interrupts which might cause a timeout here */
-	flag = disable_interrupts ();
+	rcode = disable_interrupts ();
+	if (rcode != 0) {
+		printf ("Interrupts could not be disabled\n");
+		return rcode;
+	}
 	*addr = (FPW) 0x00400040;	/* write setup */
 	*addr = data;
 

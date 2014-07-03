@@ -85,17 +85,17 @@
 #define CONFIG_CMD_LOADB
 #define CONFIG_CMD_LOADS
 #define CONFIG_CMD_MEMORY
-#define CONFIG_CMD_NET
-#define CONFIG_CMD_PING
+// #define CONFIG_CMD_NET
+// #define CONFIG_CMD_PING
 
 
 #define CONFIG_BOOTDELAY	3
 /*#define CONFIG_BOOTARGS	"root=ramfs devfs=mount console=ttySA0,9600" */
 
-#define CONFIG_ETHADDR		00:04:f3:ff:ff:fb /*@TODO unset */
-#define CONFIG_NETMASK          255.255.255.0
-#define CONFIG_IPADDR		192.168.42.30
-#define CONFIG_SERVERIP		192.168.42.1
+// #define CONFIG_ETHADDR		00:04:f3:ff:ff:fb /*@TODO unset */
+// #define CONFIG_NETMASK          255.255.255.0
+// #define CONFIG_IPADDR		192.168.42.30
+// #define CONFIG_SERVERIP		192.168.42.1
 
 /*#define CONFIG_BOOTFILE	"elinos-lart" */
 /*#define CONFIG_BOOTCOMMAND	"tftp; bootm" */
@@ -121,12 +121,11 @@
 
 #define	CONFIG_SYS_LOAD_ADDR		0x00600000	/* default load address	*/ /* @TODO */
 
-#define	CONFIG_SYS_HZ			(CPU_CLK_FREQ/64)
 
 /* valid baudrates */
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
 
-#define NS9750_ETH_PHY_ADDRESS	(0x0000)
+// #define NS9750_ETH_PHY_ADDRESS	(0x0000)
 
 /*-----------------------------------------------------------------------
  * Stack sizes
@@ -180,8 +179,8 @@
 #endif
 
 /* timeout values are in ticks */
-#define CONFIG_SYS_FLASH_ERASE_TOUT	(5*CONFIG_SYS_HZ) /* Timeout for Flash Erase */
-#define CONFIG_SYS_FLASH_WRITE_TOUT	(5*CONFIG_SYS_HZ) /* Timeout for Flash Write */
+#define CONFIG_SYS_FLASH_ERASE_TOUT	(5*CPU_CLK_FREQ/64) /* Timeout for Flash Erase */
+#define CONFIG_SYS_FLASH_WRITE_TOUT	(5*CPU_CLK_FREQ/64) /* Timeout for Flash Write */
 
 /* @TODO */
 /*#define	CONFIG_ENV_IS_IN_FLASH	1*/
