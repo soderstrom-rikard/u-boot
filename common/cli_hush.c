@@ -1840,7 +1840,7 @@ static int run_list_real(struct pipe *pi)
 		if (rmode == RES_DO) {
 			if (!flag_rep) continue;
 		}
-		if ((rmode == RES_DONE)) {
+		if (rmode == RES_DONE) {
 			if (flag_rep) {
 				flag_restore = 1;
 			} else {
@@ -3215,7 +3215,9 @@ static int parse_stream_outer(struct in_str *inp, int flag)
 			free_pipe_list(ctx.list_head,0);
 		}
 		b_free(&temp);
-	} while (rcode != -1 && !(flag & FLAG_EXIT_FROM_LOOP));   /* loop on syntax errors, return on EOF */
+	/* loop on syntax errors, return on EOF */
+	} while (rcode != -1 && !(flag & FLAG_EXIT_FROM_LOOP) &&
+		(inp->peek != static_peek || b_peek(inp)));
 #ifndef __U_BOOT__
 	return 0;
 #else
@@ -3567,7 +3569,7 @@ static char **make_list_in(char **inp, char *name)
 		p3 = insert_var_value(inp[i]);
 		p1 = p3;
 		while (*p1) {
-			if ((*p1 == ' ')) {
+			if (*p1 == ' ') {
 				p1++;
 				continue;
 			}
