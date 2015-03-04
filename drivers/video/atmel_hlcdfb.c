@@ -13,6 +13,10 @@
 #include <lcd.h>
 #include <atmel_hlcdc.h>
 
+#if defined(CONFIG_LCD_LOGO)
+#include <bmp_logo.h>
+#endif
+
 /* configurable parameters */
 #define ATMEL_LCDC_CVAL_DEFAULT		0xc8
 #define ATMEL_LCDC_DMA_BURST_LEN	8
@@ -35,6 +39,15 @@ void lcd_setcolreg(ushort regno, ushort red, ushort green, ushort blue)
 		| ((green << LCDC_BASECLUT_GCLUT_Pos) & LCDC_BASECLUT_GCLUT_Msk)
 		| ((blue << LCDC_BASECLUT_BCLUT_Pos) & LCDC_BASECLUT_BCLUT_Msk),
 		panel_info.mmio + ATMEL_LCDC_LUT(regno));
+}
+
+ushort *configuration_get_cmap(void)
+{
+#if defined(CONFIG_LCD_LOGO)
+	return bmp_logo_palette;
+#else
+	return NULL;
+#endif
 }
 
 void lcd_ctrl_init(void *lcdbase)
@@ -171,6 +184,9 @@ void lcd_ctrl_init(void *lcdbase)
 			| LCDC_BASECTRL_DMAIEN | LCDC_BASECTRL_DFETCH;
 	desc->next = (u32)desc;
 
+	/* Flush the DMA descriptor if we enabled dcache */
+	flush_dcache_range((u32)desc, (u32)desc + sizeof(*desc));
+
 	lcdc_writel(&regs->lcdc_baseaddr, desc->address);
 	lcdc_writel(&regs->lcdc_basectrl, desc->control);
 	lcdc_writel(&regs->lcdc_basenext, desc->next);
@@ -194,4 +210,7 @@ void lcd_ctrl_init(void *lcdbase)
 	lcdc_writel(&regs->lcdc_lcden, value | LCDC_LCDEN_PWMEN);
 	while (!(lcdc_readl(&regs->lcdc_lcdsr) & LCDC_LCDSR_PWMSTS))
 		udelay(1);
+
+	/* Enable flushing if we enabled dcache */
+	lcd_set_flush_dcache(1);
 }

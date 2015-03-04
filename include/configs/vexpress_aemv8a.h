@@ -8,15 +8,26 @@
 #ifndef __VEXPRESS_AEMV8A_H
 #define __VEXPRESS_AEMV8A_H
 
-#define DEBUG
+/* We use generic board for v8 Versatile Express */
+#define CONFIG_SYS_GENERIC_BOARD
+
+#ifdef CONFIG_TARGET_VEXPRESS64_BASE_FVP
+#ifndef CONFIG_SEMIHOSTING
+#error CONFIG_TARGET_VEXPRESS64_BASE_FVP requires CONFIG_SEMIHOSTING
+#endif
+#define CONFIG_BOARD_LATE_INIT
+#define CONFIG_ARMV8_SWITCH_TO_EL1
+#endif
 
 #define CONFIG_REMAKE_ELF
 
+#if !defined(CONFIG_TARGET_VEXPRESS64_BASE_FVP) && \
+    !defined(CONFIG_TARGET_VEXPRESS64_JUNO)
+/* Base FVP and Juno not using GICv3 yet */
 #define CONFIG_GICV3
+#endif
 
 /*#define CONFIG_ARMV8_SWITCH_TO_EL1*/
-
-/*#define CONFIG_SYS_GENERIC_BOARD*/
 
 #define CONFIG_SYS_NO_FLASH
 
@@ -30,16 +41,28 @@
 #define CONFIG_BOOTP_VCI_STRING		"U-boot.armv8.vexpress_aemv8a"
 
 /* Link Definitions */
+#ifdef CONFIG_TARGET_VEXPRESS64_BASE_FVP
+/* ATF loads u-boot here for BASE_FVP model */
+#define CONFIG_SYS_TEXT_BASE		0x88000000
+#define CONFIG_SYS_INIT_SP_ADDR         (CONFIG_SYS_SDRAM_BASE + 0x03f00000)
+#elif CONFIG_TARGET_VEXPRESS64_JUNO
+#define CONFIG_SYS_TEXT_BASE		0xe0000000
+#define CONFIG_SYS_INIT_SP_ADDR         (CONFIG_SYS_SDRAM_BASE + 0x7fff0)
+#else
 #define CONFIG_SYS_TEXT_BASE		0x80000000
 #define CONFIG_SYS_INIT_SP_ADDR         (CONFIG_SYS_SDRAM_BASE + 0x7fff0)
+#endif
 
 /* Flat Device Tree Definitions */
 #define CONFIG_OF_LIBFDT
 
-#define CONFIG_DEFAULT_DEVICE_TREE	vexpress64
 
 /* SMP Spin Table Definitions */
+#ifdef CONFIG_TARGET_VEXPRESS64_BASE_FVP
+#define CPU_RELEASE_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x03f00000)
+#else
 #define CPU_RELEASE_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x7fff0)
+#endif
 
 /* CS register bases for the original memory map. */
 #define V2M_PA_CS0			0x00000000
@@ -69,10 +92,15 @@
 #define V2M_KMI0			(V2M_PA_CS3 + V2M_PERIPH_OFFSET(6))
 #define V2M_KMI1			(V2M_PA_CS3 + V2M_PERIPH_OFFSET(7))
 
+#ifdef CONFIG_TARGET_VEXPRESS64_JUNO
+#define V2M_UART0			0x7ff80000
+#define V2M_UART1			0x7ff70000
+#else /* Not Juno */
 #define V2M_UART0			(V2M_PA_CS3 + V2M_PERIPH_OFFSET(9))
 #define V2M_UART1			(V2M_PA_CS3 + V2M_PERIPH_OFFSET(10))
 #define V2M_UART2			(V2M_PA_CS3 + V2M_PERIPH_OFFSET(11))
 #define V2M_UART3			(V2M_PA_CS3 + V2M_PERIPH_OFFSET(12))
+#endif
 
 #define V2M_WDT				(V2M_PA_CS3 + V2M_PERIPH_OFFSET(15))
 
@@ -99,15 +127,24 @@
 #define GICD_BASE			(0x2f000000)
 #define GICR_BASE			(0x2f100000)
 #else
+
+#ifdef CONFIG_TARGET_VEXPRESS64_BASE_FVP
+#define GICD_BASE			(0x2f000000)
+#define GICC_BASE			(0x2c000000)
+#elif CONFIG_TARGET_VEXPRESS64_JUNO
+#define GICD_BASE			(0x2C010000)
+#define GICC_BASE			(0x2C02f000)
+#else
 #define GICD_BASE			(0x2C001000)
 #define GICC_BASE			(0x2C002000)
+#endif
 #endif
 
 #define CONFIG_SYS_MEMTEST_START	V2M_BASE
 #define CONFIG_SYS_MEMTEST_END		(V2M_BASE + 0x80000000)
 
 /* Size of malloc() pool */
-#define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + 128 * 1024)
+#define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (8 << 20))
 
 /* SMSC91C111 Ethernet Configuration */
 #define CONFIG_SMC91111			1
@@ -115,13 +152,16 @@
 
 /* PL011 Serial Configuration */
 #define CONFIG_PL011_SERIAL
+#ifdef CONFIG_TARGET_VEXPRESS64_JUNO
+#define CONFIG_PL011_CLOCK		7273800
+#else
 #define CONFIG_PL011_CLOCK		24000000
+#endif
 #define CONFIG_PL01x_PORTS		{(void *)CONFIG_SYS_SERIAL0, \
 					 (void *)CONFIG_SYS_SERIAL1}
 #define CONFIG_CONS_INDEX		0
 
 #define CONFIG_BAUDRATE			115200
-#define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
 #define CONFIG_SYS_SERIAL0		V2M_UART0
 #define CONFIG_SYS_SERIAL1		V2M_UART1
 
@@ -130,11 +170,14 @@
 /*#define CONFIG_MENU_SHOW*/
 #define CONFIG_CMD_CACHE
 #define CONFIG_CMD_BDI
+#define CONFIG_CMD_BOOTI
+#define CONFIG_CMD_UNZIP
 #define CONFIG_CMD_DHCP
 #define CONFIG_CMD_PXE
 #define CONFIG_CMD_ENV
 #define CONFIG_CMD_FLASH
 #define CONFIG_CMD_IMI
+#define CONFIG_CMD_LOADB
 #define CONFIG_CMD_MEMORY
 #define CONFIG_CMD_MII
 #define CONFIG_CMD_NET
@@ -165,17 +208,40 @@
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
 
 /* Initial environment variables */
+#ifdef CONFIG_TARGET_VEXPRESS64_BASE_FVP
 #define CONFIG_EXTRA_ENV_SETTINGS	\
-					"kernel_addr=0x200000\0"	\
-					"initrd_addr=0xa00000\0"	\
-					"initrd_size=0x2000000\0"	\
-					"fdt_addr=0x100000\0"		\
+				"kernel_name=uImage\0"	\
+				"kernel_addr_r=0x80000000\0"	\
+				"initrd_name=ramdisk.img\0"	\
+				"initrd_addr_r=0x88000000\0"	\
+				"fdt_name=devtree.dtb\0"		\
+				"fdt_addr_r=0x83000000\0"		\
+				"fdt_high=0xffffffffffffffff\0"	\
+				"initrd_high=0xffffffffffffffff\0"
+
+#define CONFIG_BOOTARGS		"console=ttyAMA0 earlyprintk=pl011,"\
+				"0x1c090000 debug user_debug=31 "\
+				"loglevel=9"
+
+#define CONFIG_BOOTCOMMAND	"fdt addr $fdt_addr_r; fdt resize; " \
+				"fdt chosen $initrd_addr_r $initrd_end; " \
+				"bootm $kernel_addr_r - $fdt_addr_r"
+
+#define CONFIG_BOOTDELAY		1
+
+#else
+
+#define CONFIG_EXTRA_ENV_SETTINGS	\
+					"kernel_addr_r=0x80000000\0"	\
+					"initrd_addr_r=0x88000000\0"	\
+					"fdt_addr_r=0x83000000\0"		\
 					"fdt_high=0xa0000000\0"
 
 #define CONFIG_BOOTARGS			"console=ttyAMA0 root=/dev/ram0"
-#define CONFIG_BOOTCOMMAND		"bootm $kernel_addr " \
-					"$initrd_addr:$initrd_size $fdt_addr"
+#define CONFIG_BOOTCOMMAND		"bootm $kernel_addr_r " \
+					"$initrd_addr_r:$initrd_size $fdt_addr_r"
 #define CONFIG_BOOTDELAY		-1
+#endif
 
 /* Do not preserve environment */
 #define CONFIG_ENV_IS_NOWHERE		1
@@ -187,10 +253,9 @@
 #define CONFIG_SYS_PBSIZE		(CONFIG_SYS_CBSIZE + \
 					sizeof(CONFIG_SYS_PROMPT) + 16)
 #define CONFIG_SYS_HUSH_PARSER
-#define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
 #define CONFIG_SYS_BARGSIZE		CONFIG_SYS_CBSIZE
 #define CONFIG_SYS_LONGHELP
-#define CONFIG_CMDLINE_EDITING		1
+#define CONFIG_CMDLINE_EDITING
 #define CONFIG_SYS_MAXARGS		64	/* max command args */
 
 #endif /* __VEXPRESS_AEMV8A_H */

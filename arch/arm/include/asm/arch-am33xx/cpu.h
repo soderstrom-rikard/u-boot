@@ -219,6 +219,12 @@ struct cm_dpll {
 	unsigned int resv4[2];
 	unsigned int clklcdcpixelclk;	/* offset 0x34 */
 };
+
+struct prm_device_inst {
+	unsigned int prm_rstctrl;
+	unsigned int prm_rsttime;
+	unsigned int prm_rstst;
+};
 #else
 /* Encapsulating core pll registers */
 struct cm_wkuppll {
@@ -386,9 +392,16 @@ struct cm_device_inst {
 	unsigned int cm_dll_ctrl;
 };
 
+struct prm_device_inst {
+	unsigned int prm_rstctrl;
+	unsigned int prm_rstst;
+};
+
 struct cm_dpll {
 	unsigned int resv1;
 	unsigned int clktimer2clk;	/* offset 0x04 */
+	unsigned int resv2[11];
+	unsigned int clkselmacclk;	/* offset 0x34 */ 
 };
 #endif /* CONFIG_AM43XX */
 
@@ -489,6 +502,12 @@ struct ctrl_stat {
 #define OMAP_GPIO_SETDATAOUT		0x0194
 
 /* Control Device Register */
+
+ /* Control Device Register */
+#define MREQPRIO_0_SAB_INIT1_MASK	0xFFFFFF8F
+#define MREQPRIO_0_SAB_INIT0_MASK	0xFFFFFFF8
+#define MREQPRIO_1_DSS_MASK		0xFFFFFF8F
+
 struct ctrl_dev {
 	unsigned int deviceid;		/* offset 0x00 */
 	unsigned int resv1[7];
@@ -502,8 +521,23 @@ struct ctrl_dev {
 	unsigned int macid1h;		/* offset 0x3c */
 	unsigned int resv4[4];
 	unsigned int miisel;		/* offset 0x50 */
-	unsigned int resv5[106];
+	unsigned int resv5[7];
+	unsigned int mreqprio_0;	/* offset 0x70 */
+	unsigned int mreqprio_1;	/* offset 0x74 */
+	unsigned int resv6[97];
 	unsigned int efuse_sma;		/* offset 0x1FC */
+};
+
+/* Bandwidth Limiter Portion of the L3Fast Configuration Register */
+#define BW_LIMITER_BW_FRAC_MASK         0xFFFFFFE0
+#define BW_LIMITER_BW_INT_MASK          0xFFFFFFF0
+#define BW_LIMITER_BW_WATERMARK_MASK    0xFFFFF800
+
+struct l3f_cfg_bwlimiter {
+	u32 padding0[2];
+	u32 modena_init0_bw_fractional;
+	u32 modena_init0_bw_integer;
+	u32 modena_init0_watermark_0;
 };
 
 /* gmii_sel register defines */

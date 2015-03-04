@@ -11,6 +11,9 @@
 #include <common.h>
 #include <asm/io.h>
 #include <asm/arch/imx-regs.h>
+#if !defined(CONFIG_MX25) && !defined(CONFIG_VF610)
+#include <asm/arch/sys_proto.h>
+#endif
 #include <asm/imx-common/iomux-v3.h>
 
 static void *base = (void *)IOMUXC_BASE_ADDR;
@@ -54,12 +57,38 @@ void imx_iomux_v3_setup_pad(iomux_v3_cfg_t pad)
 #endif
 }
 
+/* configures a list of pads within declared with IOMUX_PADS macro */
 void imx_iomux_v3_setup_multiple_pads(iomux_v3_cfg_t const *pad_list,
 				      unsigned count)
 {
 	iomux_v3_cfg_t const *p = pad_list;
+	int stride;
 	int i;
 
-	for (i = 0; i < count; i++)
-		imx_iomux_v3_setup_pad(*p++);
+#if defined(CONFIG_MX6QDL)
+	stride = 2;
+	if (!is_cpu_type(MXC_CPU_MX6Q) && !is_cpu_type(MXC_CPU_MX6D))
+		p += 1;
+#else
+	stride = 1;
+#endif
+	for (i = 0; i < count; i++) {
+		imx_iomux_v3_setup_pad(*p);
+		p += stride;
+	}
+}
+
+void imx_iomux_set_gpr_register(int group, int start_bit,
+					int num_bits, int value)
+{
+	int i = 0;
+	u32 reg;
+	reg = readl(base + group * 4);
+	while (num_bits) {
+		reg &= ~(1<<(start_bit + i));
+		i++;
+		num_bits--;
+	}
+	reg |= (value << start_bit);
+	writel(reg, base + group * 4);
 }
